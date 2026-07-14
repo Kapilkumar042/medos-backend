@@ -204,3 +204,68 @@ def get_my_profile(
         )
 
     return doctor
+
+
+def update_doctor_profile(
+    db,
+    doctor_id,
+    payload
+):
+    doctor = (
+        db.query(User)
+        .filter(
+            User.id == doctor_id,
+            User.role == "DOCTOR"
+        )
+        .first()
+    )
+
+    if not doctor:
+        raise Exception("Doctor not found")
+
+    if payload.name:
+        doctor.name = payload.name
+
+    if payload.email:
+        doctor.email = payload.email
+
+    if payload.mobile:
+        doctor.mobile = payload.mobile
+
+    profile = (
+        db.query(DoctorProfile)
+        .filter(
+            DoctorProfile.user_id == doctor.id
+        )
+        .first()
+    )
+
+    if not profile:
+        profile = DoctorProfile(
+            user_id=doctor.id
+        )
+        db.add(profile)
+
+    data = payload.model_dump(exclude_unset=True)
+
+    for field in [
+        "specialization",
+        "qualification",
+        "registration_no",
+        "experience_years",
+        "department",
+        "consultation_fee",
+        "gender",
+        "dob",
+        "address",
+        "city",
+        "state",
+        "pincode",
+    ]:
+        if field in data:
+            setattr(profile, field, data[field])
+
+    db.commit()
+    db.refresh(doctor)
+
+    return {"message": "Doctor updated"}

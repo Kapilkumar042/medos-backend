@@ -44,7 +44,7 @@ def register_hospital(
 
     existing_user = get_user_by_email(
         db,
-        payload.admin_email
+        payload.hospital_email
     )
 
     if existing_user:
@@ -70,14 +70,14 @@ def register_hospital(
 
         hospital_id=hospital.id,
 
-        full_name=payload.admin_name,
+        full_name=payload.hospital_name,
 
-        email=payload.admin_email,
+        email=payload.hospital_email,
 
         phone=payload.phone,
 
         password=hash_password(
-            payload.admin_password
+            payload.password
         ),
 
         role=HOSPITAL_ADMIN
@@ -89,6 +89,7 @@ def register_hospital(
     )
 
     return hospital
+
 
 def login_hospital(
     db,

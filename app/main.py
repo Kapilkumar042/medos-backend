@@ -9,6 +9,8 @@ from app.api.doctors import (
     router as doctors_router
 )
 
+from app.api.doctors import router as doctor_router
+
 from app.api.auth import router as auth_router
 from app.api.opd_patients import router as opd_patient_router
 from app.api.opd_visit import router as opd_visit_router
@@ -44,7 +46,10 @@ app.include_router(
     opd_patient_router
 )
 
-
+app.include_router(
+    doctor_router,
+    prefix="/api"
+)
 app.include_router(
     opd_visit_router
 )

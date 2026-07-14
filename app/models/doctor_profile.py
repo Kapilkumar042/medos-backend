@@ -2,24 +2,19 @@ from sqlalchemy import (
     Column,
     Integer,
     String,
-    Boolean,
+    Float,
     ForeignKey,
-    Time
+    DateTime
 )
-from sqlalchemy.orm import relationship
+from datetime import datetime
 
 from app.db.base import Base
 
 
 class DoctorProfile(Base):
-
     __tablename__ = "doctor_profiles"
 
-    id = Column(
-        Integer,
-        primary_key=True,
-        index=True
-    )
+    id = Column(Integer, primary_key=True, index=True)
 
     hospital_id = Column(
         Integer,
@@ -30,52 +25,48 @@ class DoctorProfile(Base):
     user_id = Column(
         Integer,
         ForeignKey("users.id"),
-        unique=True,
-        nullable=False
+        nullable=True
     )
 
-    specialization = Column(
-        String(255),
-        nullable=False
+    doctor_code = Column(String, unique=True)
+
+    first_name = Column(String)
+    last_name = Column(String)
+
+    gender = Column(String)
+
+    email = Column(String)
+    phone = Column(String)
+    alt_phone = Column(String)
+
+    specialization = Column(String)
+    qualification = Column(String)
+    registration_no = Column(String)
+
+    experience_years = Column(Integer)
+
+    department = Column(String)
+    designation = Column(String)
+
+    normal_fee = Column(Float)
+    on_call_fee = Column(Float)
+    emergency_fee = Column(Float)
+    follow_up_fee = Column(Float)
+
+    available_days = Column(String)
+    start_time = Column(String)
+    end_time = Column(String)
+    room_no = Column(String)
+
+    status = Column(String, default="Active")
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow
     )
 
-    qualification = Column(
-        String(255)
+    updated_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
     )
-
-    experience_years = Column(
-        Integer,
-        default=0
-    )
-
-    consultation_fee = Column(
-        Integer,
-        default=0
-    )
-
-    registration_no = Column(
-        String(100)
-    )
-
-    room_no = Column(
-        String(50)
-    )
-
-    start_time = Column(
-        Time
-    )
-
-    end_time = Column(
-        Time
-    )
-
-    is_available = Column(
-        Boolean,
-        default=True
-    )
-
-    user = relationship("User")
-
-    @property
-    def full_name(self):
-        return self.user.full_name if self.user else None
