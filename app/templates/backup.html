@@ -1,0 +1,290 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>OPD Patient and Bill</title>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        color: #000;
+        font-size: 13px;
+      }
+
+      .header {
+        text-align: center;
+        border-bottom: 2px solid #000;
+        padding-bottom: 10px;
+      }
+
+      .hospital-name {
+        font-size: 22px;
+        font-weight: bold;
+      }
+
+      .title {
+        font-size: 17px;
+        font-weight: bold;
+        margin-top: 8px;
+      }
+
+      .section {
+        margin-top: 18px;
+      }
+
+      .section-title {
+        background: #eeeeee;
+        border: 1px solid #000;
+        padding: 7px;
+        font-size: 15px;
+        font-weight: bold;
+      }
+
+      .patient-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border-left: 1px solid #000;
+        border-top: 1px solid #000;
+      }
+
+      .detail {
+        display: flex;
+        padding: 7px;
+        border-right: 1px solid #000;
+        border-bottom: 1px solid #000;
+      }
+
+      .label {
+        width: 130px;
+        font-weight: bold;
+      }
+
+      .value {
+        flex: 1;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+
+      th,
+      td {
+        border: 1px solid #000;
+        padding: 7px;
+        text-align: left;
+      }
+
+      th {
+        background: #eeeeee;
+      }
+
+      .number {
+        text-align: right;
+      }
+
+      .totals {
+        margin-top: 12px;
+        margin-left: auto;
+        width: 280px;
+      }
+
+      .total-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 0;
+      }
+
+      .net-row {
+        border-top: 2px solid #000;
+        font-size: 16px;
+        font-weight: bold;
+        padding-top: 8px;
+      }
+
+      .footer {
+        margin-top: 40px;
+        text-align: center;
+      }
+
+      @media print {
+        body {
+          margin: 0;
+          padding: 10px;
+        }
+
+        .no-print {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+
+  <body onload="window.print()">
+    <div class="header">
+      <div class="hospital-name">{{ hospital.hospital_name }}</div>
+
+      <div>{{ hospital.address or "" }}</div>
+      <div>Phone: {{ hospital.phone or "" }}</div>
+
+      <div class="title">OPD PATIENT REGISTRATION AND BILL</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Patient Details</div>
+
+      <div class="patient-details">
+        <div class="detail">
+          <span class="label">UHID:</span>
+          <span class="value">{{ patient.uhid }}</span>
+        </div>
+
+        <div class="detail">
+          <span class="label">OPD Number:</span>
+          <span class="value">{{ patient.opd_no }}</span>
+        </div>
+
+        <div class="detail">
+          <span class="label">Patient Name:</span>
+          <span class="value">
+            {{ patient.salutation or "" }} {{ patient.name }}
+          </span>
+        </div>
+
+        <div class="detail">
+          <span class="label">Gender:</span>
+          <span class="value">{{ patient.gender or "" }}</span>
+        </div>
+
+        <div class="detail">
+          <span class="label">Age:</span>
+          <span class="value">{{ patient.age or "" }}</span>
+        </div>
+
+        <div class="detail">
+          <span class="label">Date of Birth:</span>
+          <span class="value">{{ patient.dob or "" }}</span>
+        </div>
+
+        <div class="detail">
+          <span class="label">Mobile:</span>
+          <span class="value">{{ patient.mobile or "" }}</span>
+        </div>
+
+        <div class="detail">
+          <span class="label">Blood Group:</span>
+          <span class="value">{{ patient.blood_group or "" }}</span>
+        </div>
+
+        <div class="detail">
+          <span class="label">Address:</span>
+          <span class="value">{{ patient.address or "" }}</span>
+        </div>
+
+        <div class="detail">
+          <span class="label">Registration Date:</span>
+          <span class="value">{{ patient.created_at or "" }}</span>
+        </div>
+      </div>
+    </div>
+
+    {% if bill %}
+    <div class="section">
+      <div class="section-title">OPD Bill Details</div>
+
+      <div class="patient-details">
+        <div class="detail">
+          <span class="label">Bill Number:</span>
+          <span class="value">{{ bill.bill_no }}</span>
+        </div>
+
+        <div class="detail">
+          <span class="label">Bill Date:</span>
+          <span class="value">{{ bill.created_at }}</span>
+        </div>
+
+        <div class="detail">
+          <span class="label">Payment Mode:</span>
+          <span class="value">{{ bill.payment_mode or "" }}</span>
+        </div>
+
+        <div class="detail">
+          <span class="label">Remark:</span>
+          <span class="value">{{ bill.remark or "" }}</span>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Category</th>
+            <th>Qty</th>
+            <th>Amount</th>
+            <th>Discount</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td>{{ item.name }}</td>
+            <td>{{ item.category }}</td>
+            <td class="number">{{ item.qty }}</td>
+            <td class="number">₹ {{ item.amount }}</td>
+            <td class="number">₹ {{ item.discount }}</td>
+            <td class="number">
+              ₹ {{ (item.amount * item.qty) - item.discount }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="totals">
+        <div class="total-row">
+          <span>Total Amount:</span>
+          <span>₹ {{ bill.total_amount }}</span>
+        </div>
+
+        <div class="total-row">
+          <span>Total Discount:</span>
+          <span>₹ {{ bill.total_discount }}</span>
+        </div>
+
+        <div class="total-row net-row">
+          <span>Net Amount:</span>
+          <span>₹ {{ bill.net_amount }}</span>
+        </div>
+
+        <div class="total-row">
+          <span>Paid Amount:</span>
+          <span>₹ {{ bill.paid_amount }}</span>
+        </div>
+
+        <div class="total-row">
+          <span>Due Amount:</span>
+          <span>₹ {{ bill.due_amount }}</span>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="section">
+      <div class="section-title">Bill Details</div>
+
+      <p>No bill has been generated for this patient.</p>
+    </div>
+    {% endif %}
+
+    <div class="footer">
+      Thank you for visiting
+
+      <br /><br />
+
+      Authorized Signature
+    </div>
+  </body>
+</html>

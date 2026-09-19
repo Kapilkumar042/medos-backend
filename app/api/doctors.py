@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, UploadFile, File, Depends
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
+from app.services.doctor_profile_service import import_doctors
 
 from app.auth.dependencies import get_current_user
 
@@ -58,4 +59,17 @@ def update_doctor_api(
         doctor_id,
         payload,
         current_user["hospital_id"]
+    )
+
+
+@router.post("/import")
+def import_doctors_api(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    return import_doctors(
+        db,
+        file,
+        current_user
     )

@@ -39,6 +39,8 @@ class OpdPatient(Base):
 
     gender = Column(String)
 
+    age = Column(Integer)
+
     patient_type = Column(String)
 
     relation = Column(String)

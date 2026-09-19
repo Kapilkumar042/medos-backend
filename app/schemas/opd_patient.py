@@ -55,6 +55,8 @@ class OpdPatientCreate(BaseModel):
 
     id_proof_number: str | None = None
 
+    doctor_id: int | None = None
+
 
 class CreatePatientRequest(BaseModel):
 

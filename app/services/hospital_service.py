@@ -1,9 +1,13 @@
 from app.models.hospital import Hospital
 from app.models.user import User
-
+import os
+import qrcode
 from app.auth.hash import hash_password
 from app.auth.hash import verify_password
 from app.auth.jwt import create_access_token
+from app.utils.qr_generator import (
+    generate_hospital_qr
+)
 
 
 from app.repositories.user_repository import (
@@ -136,4 +140,64 @@ def login_hospital(
         "role": user.role,
 
         "full_name": user.full_name
+    }
+
+
+def create_hospital_qr(db, hospital_id):
+    print("QR REQUEST HOSPITAL ID:", hospital_id)
+
+    hospitals = db.query(Hospital).all()
+    print(
+        "AVAILABLE HOSPITALS:",
+        [(h.id, h.hospital_name) for h in hospitals]
+    )
+
+    hospital = (
+        db.query(Hospital)
+        .filter(Hospital.id == hospital_id)
+        .first()
+    )
+    print("FOUND HOSPITAL:", hospital)
+    print("QR HOSPITAL RESULT:", hospital)
+
+    if not hospital:
+        return None
+
+    if not hospital.hospital_code:
+        hospital.hospital_code = f"HOSP{hospital.id}"
+
+    # Frontend appointment booking page
+    qr_url = (
+        f"http://13.200.215.42/book-appointment"
+        f"?hospital_id={hospital.id}"
+    )
+    print("GENERATED QR URL:", qr_url)
+    os.makedirs(
+        "uploads/qr",
+        exist_ok=True
+    )
+
+    file_name = f"{hospital.id}.png"
+
+    file_path = os.path.join(
+        "uploads",
+        "qr",
+        file_name
+    )
+
+    qr = qrcode.make(qr_url)
+
+    qr.save(file_path)
+
+    # Store URL path in DB
+    hospital.qr_image = f"/uploads/qr/{file_name}"
+
+    db.commit()
+    db.refresh(hospital)
+
+    return {
+        "hospital_id": hospital.id,
+        "hospital_code": hospital.hospital_code,
+        "qr_image": hospital.qr_image,
+        "url": qr_url
     }

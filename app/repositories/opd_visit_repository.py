@@ -25,3 +25,14 @@ def get_visits_by_hospital(
         )
         .all()
     )
+
+def get_visits_by_patient(db, hospital_id, patient_id):
+    return (
+        db.query(OpdVisit)
+        .filter(
+            OpdVisit.hospital_id == hospital_id,
+            OpdVisit.patient_id == patient_id
+        )
+        .order_by(OpdVisit.id.desc())
+        .all()
+    )

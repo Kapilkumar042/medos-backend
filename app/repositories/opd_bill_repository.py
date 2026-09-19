@@ -37,3 +37,27 @@ def get_bills_by_hospital(
     ).filter(
         OpdBill.hospital_id == hospital_id
     ).all()
+
+
+def get_bill_by_id(
+    db,
+    bill_id,
+    hospital_id
+):
+    return db.query(
+        OpdBill
+    ).filter(
+        OpdBill.id == bill_id,
+        OpdBill.hospital_id == hospital_id
+    ).first()
+
+
+def get_bill_items_by_bill(
+    db,
+    bill_id
+):
+    return db.query(
+        OpdBillItem
+    ).filter(
+        OpdBillItem.bill_id == bill_id
+    ).all()

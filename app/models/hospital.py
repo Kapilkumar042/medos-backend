@@ -45,4 +45,7 @@ class Hospital(Base):
         Boolean,
         default=True
     )
-    
+
+    qr_image = Column(String, nullable=True)
+
+    hospital_code = Column(String, nullable=True)

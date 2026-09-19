@@ -33,7 +33,7 @@ router = APIRouter(
     tags=["Users"]
 )
 
-@router.post("/")
+@router.post("")
 def create_user_api(
     payload: UserCreate,
     db=Depends(get_db),
@@ -71,7 +71,7 @@ def create_user_api(
         )
     
 @router.get(
-    "/",
+    "",
     response_model=list[UserResponse]
 )
 def get_users(

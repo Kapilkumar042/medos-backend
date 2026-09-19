@@ -37,3 +37,15 @@ class CreateBillRequest(BaseModel):
     remark: str | None = None
 
     items: List[BillItemRequest]
+
+
+class UpdateBillRequest(BaseModel):
+    patient_id: int | None = None
+    visit_id: int | None = None
+    total_amount: Decimal | None = None
+    total_discount: Decimal | None = None
+    net_amount: Decimal | None = None
+    paid_amount: Decimal | None = None
+    payment_mode: str | None = None
+    remark: str | None = None
+    items: List[BillItemRequest] | None = None

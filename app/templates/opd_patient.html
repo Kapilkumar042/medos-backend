@@ -1,0 +1,290 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>OPD Bill - {{ bill.bill_no }}</title>
+
+    <style>
+      @page {
+        size: A4;
+        margin: 10mm;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: #111;
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+      }
+
+      .receipt {
+        max-width: 900px;
+        margin: auto;
+      }
+
+      .header {
+        text-align: center;
+        border-bottom: 2px solid #111;
+        padding-bottom: 10px;
+      }
+
+      .hospital-name {
+        font-size: 24px;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+
+      .hospital-info {
+        margin-top: 5px;
+        font-size: 11px;
+      }
+
+      .bill-title {
+        margin-top: 12px;
+        font-size: 18px;
+        font-weight: bold;
+      }
+
+      .top-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 5px 30px;
+        margin-top: 15px;
+        padding: 10px 0;
+        border-bottom: 1px solid #111;
+      }
+
+      .detail {
+        display: flex;
+        gap: 8px;
+        min-height: 20px;
+      }
+
+      .label {
+        min-width: 115px;
+        font-weight: bold;
+      }
+
+      .value {
+        flex: 1;
+      }
+
+      .section-title {
+        margin-top: 15px;
+        padding: 6px;
+        background: #eee;
+        border-top: 1px solid #111;
+        border-bottom: 1px solid #111;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 7px 6px;
+        border-bottom: 1px solid #999;
+      }
+
+      th {
+        text-align: left;
+        background: #f5f5f5;
+        border-top: 1px solid #111;
+        border-bottom: 1px solid #111;
+      }
+
+      .right {
+        text-align: right;
+      }
+
+      .summary {
+        width: 330px;
+        margin: 15px 0 0 auto;
+      }
+
+      .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 5px 0;
+        border-bottom: 1px solid #ddd;
+      }
+
+      .summary-row.net {
+        border-top: 2px solid #111;
+        border-bottom: 2px solid #111;
+        font-size: 15px;
+        font-weight: bold;
+        padding: 8px 0;
+      }
+
+      .amount-words {
+        margin-top: 18px;
+        padding: 8px;
+        border-top: 1px solid #111;
+        border-bottom: 1px solid #111;
+        font-weight: bold;
+      }
+
+      .footer {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 55px;
+        padding-top: 10px;
+        border-top: 1px solid #111;
+      }
+
+      .signature {
+        text-align: center;
+        min-width: 180px;
+      }
+
+      @media print {
+        body {
+          margin: 0;
+        }
+
+        .receipt {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+
+  <body onload="window.print()">
+    <main class="receipt">
+      <header class="header">
+        <div class="hospital-name">{{ hospital.hospital_name }}</div>
+
+        <div class="hospital-info">
+          {{ hospital.address or "" }} {% if hospital.phone %} | Phone: {{
+          hospital.phone }} {% endif %}
+        </div>
+
+        <div class="bill-title">OPD BILL / RECEIPT</div>
+      </header>
+
+      <section class="top-details">
+        <div class="detail">
+          <span class="label">Patient Name:</span>
+          <span class="value">
+            {{ patient.salutation or "" }} {{ patient.name }}
+          </span>
+        </div>
+
+        <div class="detail">
+          <span class="label">Bill No:</span>
+          <span class="value">{{ bill.bill_no }}</span>
+        </div>
+
+        <div class="detail">
+          <span class="label">UHID:</span>
+          <span class="value">{{ patient.uhid }}</span>
+        </div>
+
+        <div class="detail">
+          <span class="label">Bill Date:</span>
+          <span class="value">{{ bill.created_at }}</span>
+        </div>
+
+        <div class="detail">
+          <span class="label">OPD No:</span>
+          <span class="value">{{ patient.opd_no }}</span>
+        </div>
+
+        <div class="detail">
+          <span class="label">Payment Mode:</span>
+          <span class="value">{{ bill.payment_mode or "" }}</span>
+        </div>
+
+        <div class="detail">
+          <span class="label">Age / Gender:</span>
+          <span class="value">
+            {{ patient.age or "" }} / {{ patient.gender or "" }}
+          </span>
+        </div>
+
+        <div class="detail">
+          <span class="label">Mobile:</span>
+          <span class="value">{{ patient.mobile or "" }}</span>
+        </div>
+      </section>
+
+      <div class="section-title">Particulars</div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Category</th>
+            <th>Order Date</th>
+            <th class="right">Qty</th>
+            <th class="right">Unit Rate</th>
+            <th class="right">Discount</th>
+            <th class="right">Amount</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td>{{ item.name }}</td>
+            <td>{{ item.category }}</td>
+            <td>{{ bill.created_at }}</td>
+            <td class="right">{{ item.qty }}</td>
+            <td class="right">₹ {{ item.amount }}</td>
+            <td class="right">₹ {{ item.discount }}</td>
+            <td class="right">
+              ₹ {{ (item.amount * item.qty) - item.discount }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="summary">
+        <div class="summary-row">
+          <span>Total Amount:</span>
+          <span>₹ {{ bill.total_amount }}</span>
+        </div>
+
+        <div class="summary-row">
+          <span>Total Discount:</span>
+          <span>₹ {{ bill.total_discount }}</span>
+        </div>
+
+        <div class="summary-row net">
+          <span>Net Amount:</span>
+          <span>₹ {{ bill.net_amount }}</span>
+        </div>
+
+        <div class="summary-row">
+          <span>Amount Paid:</span>
+          <span>₹ {{ bill.paid_amount }}</span>
+        </div>
+
+        <div class="summary-row">
+          <span>Balance Due:</span>
+          <span>₹ {{ bill.due_amount }}</span>
+        </div>
+      </div>
+
+      {% if bill.remark %}
+      <div class="amount-words">Remark: {{ bill.remark }}</div>
+      {% endif %}
+
+      <footer class="footer">
+        <div>Thank you for visiting</div>
+
+        <div class="signature">Authorized Signature</div>
+      </footer>
+    </main>
+  </body>
+</html>

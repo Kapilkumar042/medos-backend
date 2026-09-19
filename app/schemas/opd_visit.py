@@ -23,3 +23,11 @@ class VisitResponse(CreateVisitRequest):
 
     class Config:
         from_attributes = True
+
+
+class UpdateVisitRequest(BaseModel):
+    doctor_id: int | None = None
+    department: str | None = None
+    visit_date: date | None = None
+    symptoms: str | None = None
+    notes: str | None = None
