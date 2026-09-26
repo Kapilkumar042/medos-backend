@@ -1,4 +1,5 @@
-from fastapi import APIRouter, UploadFile, File, Depends
+from fastapi import HTTPException
+from app.services.lab_test_service import delete_lab_test
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -73,3 +74,27 @@ def import_lab_tests_api(
         file,
         current_user
     )
+
+
+@router.delete("/{test_id}")
+def delete_lab_test_api(
+    test_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    test = delete_lab_test(
+        db,
+        test_id,
+        current_user["hospital_id"],
+    )
+
+    if not test:
+        raise HTTPException(
+            status_code=404,
+            detail="Lab test not found",
+        )
+
+    return {
+        "message": "Lab test deactivated successfully",
+        "id": test.id,
+    }

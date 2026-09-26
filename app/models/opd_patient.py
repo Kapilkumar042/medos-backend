@@ -31,7 +31,7 @@ class OpdPatient(Base):
 
     aadhaar = Column(String)
 
-    opd_no = Column(String, nullable=False)
+    opd_no = Column(String, nullable=True)
 
     salutation = Column(String)
 

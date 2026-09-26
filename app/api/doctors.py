@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, Depends
+from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -14,7 +14,8 @@ from app.schemas.doctor_profile import (
 from app.services.doctor_profile_service import (
     create_doctor,
     get_doctors,
-    update_doctor
+    update_doctor,
+    delete_doctor,
 )
 
 router = APIRouter(
@@ -73,3 +74,27 @@ def import_doctors_api(
         file,
         current_user
     )
+
+
+@router.delete("/{doctor_id}")
+def delete_doctor_api(
+    doctor_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    doctor = delete_doctor(
+        db,
+        doctor_id,
+        current_user["hospital_id"],
+    )
+
+    if not doctor:
+        raise HTTPException(
+            status_code=404,
+            detail="Doctor not found",
+        )
+
+    return {
+        "message": "Doctor deactivated successfully",
+        "doctor_id": doctor.id,
+    }

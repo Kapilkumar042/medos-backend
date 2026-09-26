@@ -4,7 +4,8 @@ from sqlalchemy import (
     String,
     Float,
     ForeignKey,
-    DateTime
+    DateTime,
+    Time
 )
 from datetime import datetime
 
@@ -54,8 +55,8 @@ class DoctorProfile(Base):
     follow_up_fee = Column(Float)
 
     available_days = Column(String)
-    start_time = Column(String)
-    end_time = Column(String)
+    start_time = Column(Time, nullable=True)
+    end_time = Column(Time, nullable=True)
     room_no = Column(String)
 
     status = Column(String, default="Active")

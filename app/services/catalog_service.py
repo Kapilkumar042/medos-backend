@@ -138,3 +138,22 @@ def import_catalog_items(
         "message": f"{len(created)} records imported successfully",
         "count": len(created)
     }
+
+
+def delete_catalog_item(db, model, item_id, hospital_id):
+    item = (
+        db.query(model)
+        .filter(
+            model.id == item_id,
+            model.hospital_id == hospital_id,
+        )
+        .first()
+    )
+
+    if not item:
+        return None
+
+    db.delete(item)
+    db.commit()
+
+    return item

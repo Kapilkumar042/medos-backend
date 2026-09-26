@@ -24,7 +24,8 @@ from app.services.catalog_service import (
     create_catalog_item,
     list_catalog_items,
     update_catalog_item,
-    import_catalog_items
+    import_catalog_items,
+    delete_catalog_item,
 )
 from app.models.lab_test import LabTest
 
@@ -393,3 +394,99 @@ def import_lab_tests_api(
         file,
         current_user
     )
+
+@router.delete("/radiology/{item_id}")
+def delete_radiology(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    item = delete_catalog_item(
+        db,
+        RadiologyTest,
+        item_id,
+        current_user["hospital_id"],
+    )
+
+    if not item:
+        raise HTTPException(404, "Radiology test not found")
+
+    return {"message": "Radiology test deleted successfully", "id": item_id}
+
+
+@router.delete("/lab/{item_id}")
+def delete_lab_test(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    item = delete_catalog_item(
+        db,
+        LabTest,
+        item_id,
+        current_user["hospital_id"],
+    )
+
+    if not item:
+        raise HTTPException(404, "Lab test not found")
+
+    return {"message": "Lab test deleted successfully", "id": item_id}
+
+
+@router.delete("/service/{item_id}")
+def delete_service(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    item = delete_catalog_item(
+        db,
+        HospitalService,
+        item_id,
+        current_user["hospital_id"],
+    )
+
+    if not item:
+        raise HTTPException(404, "Service not found")
+
+    return {"message": "Service deleted successfully", "id": item_id}    
+
+
+@router.delete("/department/{item_id}")
+def delete_department(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    item = delete_catalog_item(
+        db,
+        Department,
+        item_id,
+        current_user["hospital_id"],
+    )
+
+    if not item:
+        raise HTTPException(404, "Department not found")
+
+    return {"message": "Department deleted successfully", "id": item_id}
+
+
+@router.delete("/medicine/{item_id}")
+def delete_medicine(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    item = delete_catalog_item(
+        db,
+        Medicine,
+        item_id,
+        current_user["hospital_id"],
+    )
+
+    if not item:
+        raise HTTPException(404, "Medicine not found")
+
+    return {"message": "Medicine deleted successfully", "id": item_id}
+
+

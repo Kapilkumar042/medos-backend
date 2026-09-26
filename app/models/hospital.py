@@ -37,6 +37,11 @@ class Hospital(Base):
         nullable=False
     )
 
+    address = Column(
+    String(500),
+    nullable=True
+    ) 
+    logo_image = Column(String(500), nullable=True)
     modules = Column(
         String(500)
     )

@@ -1,0 +1,386 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>IPD Bill - {{ bill.bill_no }}</title>
+
+<style>
+
+@page {
+    size: A4;
+    margin: 8mm;
+}
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    color:#111;
+    font-family:Arial,sans-serif;
+    font-size:11px;
+}
+
+.receipt{
+    max-width:900px;
+    margin:auto;
+}
+
+.header{
+    text-align:center;
+    border-bottom:2px solid #111;
+    padding-bottom:8px;
+}
+
+.hospital-name{
+    font-size:20px;
+    font-weight:bold;
+    text-transform:uppercase;
+}
+
+.hospital-info{
+    margin-top:4px;
+    font-size:10px;
+    line-height:1.4;
+}
+
+.bill-title{
+    margin-top:10px;
+    font-size:16px;
+    font-weight:bold;
+}
+
+.top-details{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:4px 20px;
+    margin-top:12px;
+    padding-bottom:10px;
+    border-bottom:1px solid #111;
+}
+
+.detail{
+    display:flex;
+}
+
+.label{
+    width:130px;
+    font-weight:bold;
+}
+
+.value{
+    flex:1;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:12px;
+}
+
+th,
+td{
+    padding:6px;
+    border-bottom:1px solid #ccc;
+}
+
+th{
+    background:#f4f4f4;
+    border-top:1px solid #111;
+    border-bottom:1px solid #111;
+}
+
+.right{
+    text-align:right;
+}
+.left{
+    text-align:left;
+}
+
+.summary{
+    width:350px;
+    margin-left:auto;
+    margin-top:15px;
+}
+
+.summary-row{
+    display:flex;
+    justify-content:space-between;
+    padding:5px 0;
+    border-bottom:1px solid #ddd;
+}
+
+.summary-row.net{
+    border-top:2px solid #111;
+    border-bottom:2px solid #111;
+    font-weight:bold;
+    font-size:13px;
+}
+
+.remark{
+    margin-top:15px;
+    padding:8px;
+    border:1px solid #ddd;
+}
+
+.footer{
+    display:flex;
+    justify-content:space-between;
+    /* margin-top:50px; */
+    border-top:1px solid #111;
+    /* padding-top:10px; */
+}
+
+.signature{
+    min-width:180px;
+    text-align:center;
+}
+
+</style>
+</head>
+
+<body onload="window.print()">
+
+<div class="receipt">
+
+<div class="header">
+
+<div class="hospital-name">
+{{ hospital.hospital_name }}
+</div>
+
+<div class="hospital-info">
+
+{{ hospital.address or "" }}
+
+<br>
+
+Phone:
+{{ hospital.phone or "" }}
+
+{% if hospital.email %}
+|
+Email:
+{{ hospital.email }}
+{% endif %}
+Address:
+{{ hospital.address or "" }}
+
+</div>
+
+<div class="bill-title">
+IPD BILL / RECEIPT
+</div>
+
+</div>
+
+
+<div class="top-details">
+
+<div class="detail">
+<div class="label">Patient Name</div>
+<div class="value">{{ patient.name }}</div>
+</div>
+
+<div class="detail">
+<div class="label">Bill No</div>
+<div class="value">{{ bill.bill_no }}</div>
+</div>
+
+<div class="detail">
+<div class="label">UHID</div>
+<div class="value">{{ patient.uhid }}</div>
+</div>
+
+<div class="detail">
+<div class="label">Admission No</div>
+<div class="value">{{ admission.admission_no }}</div>
+</div>
+
+<div class="detail">
+<div class="label">Age / Gender</div>
+<div class="value">
+{{ patient.age }}
+/
+{{ patient.gender }}
+</div>
+</div>
+
+<div class="detail">
+<div class="label">Mobile</div>
+<div class="value">
+{{ patient.mobile }}
+</div>
+</div>
+
+<div class="detail">
+<div class="label">Ward</div>
+<div class="value">
+{{ admission.ward }}
+</div>
+</div>
+
+<div class="detail">
+<div class="label">Room</div>
+<div class="value">
+{{ admission.room }}
+</div>
+</div>
+
+<div class="detail">
+<div class="label">Bed</div>
+<div class="value">
+{{ admission.bed_no }}
+</div>
+</div>
+
+<div class="detail">
+<div class="label">Doctor</div>
+<div class="value">
+{{ doctor.first_name }} {{ doctor.last_name }}
+</div>
+</div>
+
+<div class="detail">
+  <div class="label">Admission Date</div>
+  <div class="value">
+    {{ admission.admission_date|indian_datetime if admission.admission_date else "-" }}
+  </div>
+</div>
+
+<div class="detail">
+  <div class="label">Discharge Date</div>
+  <div class="value">
+    {{ bill.bill_date|indian_datetime if bill.bill_date else bill.created_at|indian_datetime }}
+  </div>
+</div>
+
+<div class="detail">
+  <div class="label">Payment Mode</div>
+  <div class="value">
+    {{ bill.payment_mode }}
+  </div>
+</div>
+
+<div class="detail">
+  <div class="label">Bill Date</div>
+  <div class="value">
+    {{ bill.bill_date|indian_datetime if bill.bill_date else bill.created_at|indian_datetime }}
+  </div>
+</div>
+
+</div>
+
+
+<table>
+
+<thead>
+
+<tr>
+<th class="left">Service</th>
+<th class="left">Category</th>
+<th class="right">Qty</th>
+<th class="right">Rate</th>
+<th class="right">Discount</th>
+<th class="right">Amount</th>
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for item in items %}
+
+<tr>
+
+<td>{{ item.name }}</td>
+
+<td>{{ item.category }}</td>
+
+<td class="right">
+{{ item.qty }}
+</td>
+
+<td class="right">
+₹ {{ item.rate }}
+</td>
+
+<td class="right">
+₹ {{ item.discount }}
+</td>
+
+<td class="right">
+₹ {{ item.amount }}
+</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+
+<div class="summary">
+
+<div class="summary-row">
+<span>Total Amount</span>
+<span>₹ {{ bill.total_amount }}</span>
+</div>
+
+<div class="summary-row">
+<span>Discount</span>
+<span>₹ {{ bill.discount_amount }}</span>
+</div>
+
+<div class="summary-row">
+<span>Advance Paid</span>
+<span>₹ {{ advance_paid }}</span>
+</div>
+
+<div class="summary-row net">
+<span>Net Payable</span>
+<span>₹ {{ bill.net_amount }}</span>
+</div>
+
+<div class="summary-row">
+<span>Paid Now</span>
+<span>₹ {{ bill.paid_amount }}</span>
+</div>
+
+<div class="summary-row">
+<span>Due Amount</span>
+<span>₹ {{ bill.due_amount }}</span>
+</div>
+
+</div>
+
+
+{% if bill.remark %}
+
+<div class="remark">
+<b>Remark:</b>
+{{ bill.remark }}
+</div>
+
+{% endif %}
+
+
+<div class="footer">
+
+<div>
+Thank you for choosing our hospital
+</div>
+
+<div class="signature">
+Authorized Signature
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>

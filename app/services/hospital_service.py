@@ -2,6 +2,13 @@ from app.models.hospital import Hospital
 from app.models.user import User
 import os
 import qrcode
+import json
+import os
+import shutil
+import uuid
+
+from fastapi import UploadFile
+from app.repositories.hospital_repository import get_hospital_by_id
 from app.auth.hash import hash_password
 from app.auth.hash import verify_password
 from app.auth.jwt import create_access_token
@@ -60,6 +67,7 @@ def register_hospital(
         hospital_name=payload.hospital_name,
         email=payload.hospital_email,
         phone=payload.phone,
+        address=payload.address,
         password="TEMP",
         modules=",".join(payload.modules)
     )
@@ -201,3 +209,80 @@ def create_hospital_qr(db, hospital_id):
         "qr_image": hospital.qr_image,
         "url": qr_url
     }
+
+def get_hospital_profile(db, hospital_id):
+    hospital = get_hospital_by_id(db, hospital_id)
+
+    if not hospital:
+        return None
+
+    return {
+        "id": hospital.id,
+        "hospital_name": hospital.hospital_name,
+        "email": hospital.email,
+        "phone": hospital.phone,
+        "address": hospital.address,
+        "logo_image": hospital.logo_image,
+        "modules": (
+            hospital.modules.split(",")
+            if hospital.modules
+            else []
+        ),
+        "is_active": hospital.is_active,
+        "hospital_code": hospital.hospital_code,
+    }
+
+
+def update_hospital_profile(
+    db,
+    hospital_id,
+    hospital_name=None,
+    phone=None,
+    address=None,
+    modules=None,
+    logo: UploadFile | None = None,
+):
+    hospital = get_hospital_by_id(db, hospital_id)
+
+    if not hospital:
+        return None
+
+    if hospital_name is not None:
+        hospital.hospital_name = hospital_name
+
+    if phone is not None:
+        hospital.phone = phone
+
+    if address is not None:
+        hospital.address = address
+
+    if modules is not None:
+        try:
+            parsed_modules = json.loads(modules)
+            if not isinstance(parsed_modules, list):
+                raise ValueError
+        except (json.JSONDecodeError, ValueError):
+            parsed_modules = [
+                item.strip()
+                for item in modules.split(",")
+                if item.strip()
+            ]
+
+        hospital.modules = ",".join(parsed_modules)
+
+    if logo and logo.filename:
+        os.makedirs("uploads/hospitals", exist_ok=True)
+
+        extension = os.path.splitext(logo.filename)[1].lower()
+        filename = f"{hospital.id}-{uuid.uuid4().hex}{extension}"
+        file_path = os.path.join("uploads", "hospitals", filename)
+
+        with open(file_path, "wb") as output:
+            shutil.copyfileobj(logo.file, output)
+
+        hospital.logo_image = f"/uploads/hospitals/{filename}"
+
+    db.commit()
+    db.refresh(hospital)
+
+    return get_hospital_profile(db, hospital_id)

@@ -1,6 +1,8 @@
+from app.admin import setup_admin
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.db.init_db import create_tables
+from app.api.hospital import router as hospital_router
 
 from app.api.users import (
     router as users_router
@@ -28,17 +30,24 @@ from app.api.opd_bills import (
 )
 
 from app.api.hospital_qr import router as hospital_qr_router
+from app.api.ipd import router as ipd_router
+from app.api.ipd_billing import router as ipd_billing_router
+from app.api.ipd_payment import router as ipd_payment_router
+
 
 
 app = FastAPI(
-    title="MedOS API"
+    title="Ncuresoft API"
 )
+
+setup_admin(app)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        "http://13.200.215.42"
+        "https://app.ncuresoft.com"
+        # "http://13.200.215.42",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -67,9 +76,14 @@ app.include_router(
 app.include_router(
     opd_visit_router
 )
+app.include_router(hospital_router)
+app.include_router(ipd_router)
+
+app.include_router(ipd_billing_router)
 app.include_router(
     opd_bill_router
 )
+app.include_router(ipd_payment_router)
 
 app.mount(
     "/uploads",
