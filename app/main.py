@@ -19,6 +19,7 @@ from app.api.public_appointment import (
     router as public_appointment_router
 )
 from app.api.catalog import router as catalog_router
+from app.api.shared_catalog import router as shared_catalog_router
 
 # from app.api.doctors import router as doctor_router
 
@@ -103,6 +104,7 @@ app.include_router(
     hospital_qr_router
 )
 app.include_router(catalog_router)
+app.include_router(shared_catalog_router)
 
 app.include_router(opd_queue_router)
 

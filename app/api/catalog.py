@@ -40,6 +40,12 @@ from app.services.lab_test_service import (
     update_lab_test,
     import_lab_tests
 )
+from app.services.lab_test_service import delete_lab_test as delete_lab_test_service
+from app.services.shared_catalog_service import (
+    delete_catalog_for_hospital,
+    list_hospital_catalog_with_legacy,
+    update_catalog_for_hospital,
+)
 
 router = APIRouter(
     # prefix="/api/catalog",
@@ -66,10 +72,11 @@ def list_radiology(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    return list_catalog_items(
+    return list_hospital_catalog_with_legacy(
         db,
+        current_user["hospital_id"],
+        "radiology",
         RadiologyTest,
-        current_user["hospital_id"]
     )
 
 
@@ -80,9 +87,10 @@ def update_radiology(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    item = update_catalog_item(
+    item = update_catalog_for_hospital(
         db,
         RadiologyTest,
+        "radiology",
         item_id,
         payload,
         current_user["hospital_id"]
@@ -113,10 +121,11 @@ def list_medicines(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    return list_catalog_items(
+    return list_hospital_catalog_with_legacy(
         db,
+        current_user["hospital_id"],
+        "medicine",
         Medicine,
-        current_user["hospital_id"]
     )
 
 
@@ -127,9 +136,10 @@ def update_medicine(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    item = update_catalog_item(
+    item = update_catalog_for_hospital(
         db,
         Medicine,
+        "medicine",
         item_id,
         payload,
         current_user["hospital_id"]
@@ -160,10 +170,11 @@ def list_services(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    return list_catalog_items(
+    return list_hospital_catalog_with_legacy(
         db,
+        current_user["hospital_id"],
+        "service",
         HospitalService,
-        current_user["hospital_id"]
     )
 
 
@@ -174,9 +185,10 @@ def update_service(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    item = update_catalog_item(
+    item = update_catalog_for_hospital(
         db,
         HospitalService,
+        "service",
         item_id,
         payload,
         current_user["hospital_id"]
@@ -354,9 +366,11 @@ def get_lab_tests_api(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user)
 ):
-    return get_lab_tests(
+    return list_hospital_catalog_with_legacy(
         db,
-        current_user["hospital_id"]
+        current_user["hospital_id"],
+        "lab",
+        LabTest,
     )
 
 
@@ -401,9 +415,10 @@ def delete_radiology(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    item = delete_catalog_item(
+    item = delete_catalog_for_hospital(
         db,
         RadiologyTest,
+        "radiology",
         item_id,
         current_user["hospital_id"],
     )
@@ -420,12 +435,7 @@ def delete_lab_test(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    item = delete_catalog_item(
-        db,
-        LabTest,
-        item_id,
-        current_user["hospital_id"],
-    )
+    item = delete_lab_test_service(db, item_id, current_user["hospital_id"])
 
     if not item:
         raise HTTPException(404, "Lab test not found")
@@ -439,9 +449,10 @@ def delete_service(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    item = delete_catalog_item(
+    item = delete_catalog_for_hospital(
         db,
         HospitalService,
+        "service",
         item_id,
         current_user["hospital_id"],
     )
@@ -477,9 +488,10 @@ def delete_medicine(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    item = delete_catalog_item(
+    item = delete_catalog_for_hospital(
         db,
         Medicine,
+        "medicine",
         item_id,
         current_user["hospital_id"],
     )

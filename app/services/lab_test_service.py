@@ -1,6 +1,18 @@
 import pandas as pd
 
 from app.models.lab_test import LabTest
+from app.services.shared_catalog_service import (
+    DATA_FIELDS,
+    deactivate_hospital_catalog_item,
+    save_hospital_catalog_by_identifier,
+    update_hospital_catalog_template,
+)
+
+
+def _lab_catalog_response(item):
+    response = {field: getattr(item, field) for field in DATA_FIELDS}
+    response.update({"id": item.id, "template_id": item.template_id, "test_name": item.name})
+    return response
 
 def _clean_excel_value(value):
     if value is None:
@@ -22,8 +34,24 @@ def create_lab_test(
     current_user
 ):
     data = payload.model_dump()
+    if "test_name" in data:
+        data["name"] = data.pop("test_name")
     if data.get("code") is not None:
         data["code"] = str(data["code"]).strip() or None
+
+    template_id = data.pop("template_id", None)
+    shared_test = save_hospital_catalog_by_identifier(
+        db,
+        current_user["hospital_id"],
+        "lab",
+        data,
+        template_id=template_id,
+    )
+    if shared_test is not None:
+        return _lab_catalog_response(shared_test)
+
+    if "name" in data:
+        data["test_name"] = data.pop("name")
 
     lab_test = LabTest(
         hospital_id=current_user["hospital_id"],
@@ -66,7 +94,19 @@ def update_lab_test(
     )
 
     if not test:
-        return None
+        changes = payload.model_dump(exclude_unset=True)
+        if "test_name" in changes:
+            changes["name"] = changes.pop("test_name")
+        shared_test = update_hospital_catalog_template(
+            db,
+            hospital_id,
+            "lab",
+            test_id,
+            changes,
+        )
+        if shared_test is None:
+            return None
+        return _lab_catalog_response(shared_test)
 
     for key, value in payload.model_dump(
         exclude_unset=True
@@ -165,7 +205,12 @@ def delete_lab_test(db, test_id, hospital_id):
     )
 
     if not test:
-        return None
+        return deactivate_hospital_catalog_item(
+            db,
+            hospital_id,
+            "lab",
+            test_id,
+        )
 
     test.status = "Inactive"
     db.commit()

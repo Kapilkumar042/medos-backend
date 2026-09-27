@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Request
-from sqladmin import Admin, ModelView
+from sqladmin import Admin, BaseView, ModelView, expose
 from sqladmin.authentication import AuthenticationBackend
 from starlette.responses import RedirectResponse
+from starlette.datastructures import UploadFile as StarletteUploadFile
 
 from app.db.session import engine
 
@@ -22,7 +23,14 @@ from app.models.catalog import (
     HospitalService,
     Department,
 )
-
+from app.models.shared_catalog import (
+    LabCatalogTemplate,
+    MedicineCatalogTemplate,
+    RadiologyCatalogTemplate,
+    ServiceCatalogTemplate,
+)
+from app.db.session import SessionLocal
+from app.services.shared_catalog_service import import_global_catalog
 
 # ============================================================
 # ADMIN AUTHENTICATION
@@ -611,6 +619,104 @@ class DepartmentAdmin(ModelView, model=Department):
     ]
 
 
+class LabCatalogAdmin(ModelView, model=LabCatalogTemplate):
+    name = "Global Lab Test"
+    name_plural = "Global Lab Tests"
+    icon = "fa-solid fa-flask"
+    column_list = [
+        LabCatalogTemplate.id, LabCatalogTemplate.code, LabCatalogTemplate.name,
+        LabCatalogTemplate.department, LabCatalogTemplate.sample_type,
+        LabCatalogTemplate.price, LabCatalogTemplate.description,
+        LabCatalogTemplate.status,
+    ]
+    column_searchable_list = [LabCatalogTemplate.code, LabCatalogTemplate.name]
+    column_sortable_list = [LabCatalogTemplate.id, LabCatalogTemplate.name, LabCatalogTemplate.price]
+
+
+class RadiologyCatalogAdmin(ModelView, model=RadiologyCatalogTemplate):
+    name = "Global Radiology Test"
+    name_plural = "Global Radiology Tests"
+    icon = "fa-solid fa-x-ray"
+    column_list = [
+        RadiologyCatalogTemplate.id, RadiologyCatalogTemplate.code,
+        RadiologyCatalogTemplate.name, RadiologyCatalogTemplate.department,
+        RadiologyCatalogTemplate.sample_type, RadiologyCatalogTemplate.price,
+        RadiologyCatalogTemplate.description, RadiologyCatalogTemplate.status,
+    ]
+    column_searchable_list = [RadiologyCatalogTemplate.code, RadiologyCatalogTemplate.name]
+    column_sortable_list = [RadiologyCatalogTemplate.id, RadiologyCatalogTemplate.name, RadiologyCatalogTemplate.price]
+
+
+class ServiceCatalogAdmin(ModelView, model=ServiceCatalogTemplate):
+    name = "Global Service"
+    name_plural = "Global Services"
+    icon = "fa-solid fa-hand-holding-medical"
+    column_list = [
+        ServiceCatalogTemplate.id, ServiceCatalogTemplate.code,
+        ServiceCatalogTemplate.name, ServiceCatalogTemplate.category,
+        ServiceCatalogTemplate.unit, ServiceCatalogTemplate.price,
+        ServiceCatalogTemplate.description, ServiceCatalogTemplate.status,
+    ]
+    column_searchable_list = [ServiceCatalogTemplate.code, ServiceCatalogTemplate.name]
+    column_sortable_list = [ServiceCatalogTemplate.id, ServiceCatalogTemplate.name, ServiceCatalogTemplate.price]
+
+
+class MedicineCatalogAdmin(ModelView, model=MedicineCatalogTemplate):
+    name = "Global Medicine"
+    name_plural = "Global Medicines"
+    icon = "fa-solid fa-pills"
+    column_list = [
+        MedicineCatalogTemplate.id, MedicineCatalogTemplate.name,
+        MedicineCatalogTemplate.dosage_type, MedicineCatalogTemplate.pack_size,
+        MedicineCatalogTemplate.stock, MedicineCatalogTemplate.purchase_rate,
+        MedicineCatalogTemplate.unit_price, MedicineCatalogTemplate.mrp,
+        MedicineCatalogTemplate.expiry_date, MedicineCatalogTemplate.status,
+    ]
+    column_searchable_list = [MedicineCatalogTemplate.name, MedicineCatalogTemplate.dosage_type]
+    column_sortable_list = [MedicineCatalogTemplate.id, MedicineCatalogTemplate.name, MedicineCatalogTemplate.mrp]
+
+
+class GlobalCatalogImportAdmin(BaseView):
+    name = "Import Global Catalog"
+    icon = "fa-solid fa-file-import"
+
+    @expose("/global-catalog-import", methods=["GET", "POST"], identity="global-catalog-import")
+    async def global_catalog_import(self, request: Request):
+        message = None
+        error = None
+        result = None
+
+        if request.method == "POST":
+            form = await request.form()
+            kind = str(form.get("kind", ""))
+            upload = form.get("file")
+            if kind not in {"lab", "radiology", "service", "medicine"}:
+                error = "Select a valid catalog type."
+            elif not isinstance(upload, StarletteUploadFile) or not upload.filename:
+                error = "Choose an Excel file to import."
+            elif not upload.filename.lower().endswith((".xlsx", ".xls")):
+                error = "Only .xlsx and .xls files are supported."
+            else:
+                db = SessionLocal()
+                try:
+                    result = import_global_catalog(db, kind, upload)
+                    message = f"Imported {result['count']} {kind} catalog rows."
+                except ValueError as exception:
+                    db.rollback()
+                    error = str(exception)
+                except Exception:
+                    db.rollback()
+                    error = "Import failed. Check the spreadsheet columns and database logs."
+                finally:
+                    db.close()
+
+        return await self.templates.TemplateResponse(
+            request,
+            "admin_global_catalog_import.html",
+            {"message": message, "error": error, "result": result},
+        )
+
+
 # ============================================================
 # SETUP ADMIN
 # ============================================================
@@ -622,6 +728,7 @@ def setup_admin(app: FastAPI):
         engine,
         authentication_backend=authentication_backend,
         title="Ncuresoft Admin",
+        templates_dir="app/templates",
     )
 
     admin.add_view(UserAdmin)
@@ -638,5 +745,10 @@ def setup_admin(app: FastAPI):
     admin.add_view(MedicineAdmin)
     admin.add_view(HospitalServiceAdmin)
     admin.add_view(DepartmentAdmin)
+    admin.add_view(LabCatalogAdmin)
+    admin.add_view(RadiologyCatalogAdmin)
+    admin.add_view(ServiceCatalogAdmin)
+    admin.add_view(MedicineCatalogAdmin)
+    admin.add_view(GlobalCatalogImportAdmin)
 
     return admin

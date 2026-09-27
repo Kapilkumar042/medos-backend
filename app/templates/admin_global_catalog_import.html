@@ -1,0 +1,54 @@
+{% extends "sqladmin/layout.html" %}
+
+{% block content %}
+<div class="container-xl">
+  <div class="page-header d-print-none">
+    <div class="row align-items-center">
+      <div class="col">
+        <h2 class="page-title">Import Global Catalog</h2>
+      </div>
+    </div>
+  </div>
+
+  {% if message %}
+  <div class="alert alert-success" role="status">{{ message }}</div>
+  {% endif %}
+  {% if error %}
+  <div class="alert alert-danger" role="alert">{{ error }}</div>
+  {% endif %}
+  {% if result and result.skipped_rows %}
+  <div class="alert alert-warning" role="status">
+    <strong>Rows skipped:</strong>
+    <ul class="mb-0">
+      {% for skipped_row in result.skipped_rows %}
+      <li>{{ skipped_row }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" class="card">
+    <div class="card-body">
+      <div class="mb-3">
+        <label class="form-label" for="catalog-kind">Catalog</label>
+        <select class="form-select" id="catalog-kind" name="kind" required>
+          <option value="">Select catalog</option>
+          <option value="lab">Lab tests</option>
+          <option value="radiology">Radiology tests</option>
+          <option value="service">Services</option>
+          <option value="medicine">Medicines</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="catalog-file">Excel file</label>
+        <input class="form-control" id="catalog-file" name="file" type="file" accept=".xlsx,.xls" required>
+      </div>
+    </div>
+    <div class="card-footer text-end">
+      <button class="btn btn-primary" type="submit">
+        <i class="fa-solid fa-file-import me-2"></i>Import catalog
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
